@@ -11,9 +11,7 @@ This template will deploy a new Check Point security gateway cluster into an exi
 
 ## Deployment Prerequisites 
 - VPC
-- Management Subnet
 - External Subnet
-- Internal Subnet
 - SSH Key
 
 ## Deployment Parameters
@@ -22,9 +20,7 @@ This template will deploy a new Check Point security gateway cluster into an exi
 | VPC_Region | The region where the VPC, networks, and Check Point VSI will be provisioned. To list the available regions, run  the following command: ```ibmcloud is regions```|
 | VPC_Name  | The VPC where the Check Point VSI will be provisioned. To list the all VPCs, run  the following command: ```ibmcloud is vpcs```|
 | Resource_Group | The resource group that will be used when provisioning the Check Point VSI. If left unspecififed, the account's default resource group will be used. command: ```ibmcloud resource groups``` |
-| Management_Subnet_ID | The ID of the subnet managing the Check Point Security Gateway that will be provisioned. To list the available subnets, run  the following command: ```ibmcloud is subnets```|
-| External_Subnet_ID | The ID of the subnet that exists in front of the Check Point Security Gateway that will be provisioned (the "external" network). To list the available subnets, run  the following command: ```ibmcloud is subnets```|
-| Internal_Subnet_ID  | The ID of the subnet that exists behind the Check Point Security Gateway that will be provisioned (the "internal" network).  To list the available subnets, run  the following command: ```ibmcloud is subnets```|
+| External_Subnet_ID | The ID of the subnet that exists in front of the Cluster and that also is bound to the VPC NLB. To list the available subnets, run  the following command: ```ibmcloud is subnets```|
 | CP_Version | Version of Check Point CloudGuard to Deploy |
 | SSH_Key       | The pubic SSH Key that will be used when provisioning the Check Point  VSI. To list the available SSH keys, run  the following command: ```ibmcloud is keys``` |
 | VNF_Security_Group | Enter a unique name for the security-group to be applied to Check Point interfaces, run the following command to show existing security groups: ```ibmcloud is security-groups```  |
@@ -40,6 +36,7 @@ This template will deploy a new Check Point security gateway cluster into an exi
 | jq-osa   | jq-osa-1, jq-osa-2, jq-osa-3 |
 | au-syd   | au-syd-1, au-syd-2, au-syd-3 |
 | ca-tor   | ca-tor-1, ca-tor-2, ca-tor-3 |
+| br-sao   | br-sao-1, br-sao-2, br-sao-3 |
 
 To list the available regions, run the following command: ```ibmcloud is regions```
 
