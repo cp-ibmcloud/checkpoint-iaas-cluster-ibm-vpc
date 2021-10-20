@@ -29,19 +29,9 @@ variable "VPC_Name" {
   description = "The VPC where the Check Point VSI will be provisioned."
 }
 
-variable "Management_Subnet_ID" {
-  default     = ""
-  description = "The ID of the Check Point management subnet."
-}
-
 variable "External_Subnet_ID" {
   default     = ""
   description = "The ID of the subnet that exists in front of the Check Point Security Gateway that will be provisioned (the 'external' network)."
-}
-
-variable "Internal_Subnet_ID" {
-  default     = ""
-  description = "The ID of the subnet that exists behind  the Check Point Security Gateway that will be provisioned (the 'internal' network)."
 }
 
 variable "SSH_Key" {
@@ -70,7 +60,7 @@ variable "VNF_Profile" {
 }
 
 variable "CP_Version" {
-  default     = "R8040"
+  default     = "R81"
   description = "The version of Check Point to deploy. R8040, R81"
 }
 
@@ -108,16 +98,8 @@ variable "TF_VERSION" {
 # Data block 
 ##############################################################################
 
-data "ibm_is_subnet" "cp_subnet0" {
-  identifier = var.Management_Subnet_ID
-}
-
-data "ibm_is_subnet" "cp_subnet1" {
+data "ibm_is_subnet" "cp_subnet" {
   identifier = var.External_Subnet_ID
-}
-
-data "ibm_is_subnet" "cp_subnet2" {
-  identifier = var.Internal_Subnet_ID
 }
 
 data "ibm_is_ssh_key" "cp_ssh_pub_key" {
@@ -166,45 +148,31 @@ resource "ibm_is_security_group_rule" "allow_ingress_all" {
   remote     = "0.0.0.0/0"
 }
 
-##############################################################################
-# Create Check Point Gateway 1
-##############################################################################
-
 locals {
   image_name = "${var.CP_Version}-${var.CP_Type}"
   image_id = lookup(local.image_map[local.image_name], var.VPC_Region)
 }
 
-resource "ibm_is_instance" "cp_gw_vsi" {
+##############################################################################
+# Create Check Point Gateway 1
+##############################################################################
+
+resource "ibm_is_instance" "cp_gw_vsi_1" {
   depends_on     = [ibm_is_security_group_rule.allow_ingress_all]
   name           = var.VNF_CP-GW_Instance1
   image          = local.image_id
   profile        = data.ibm_is_instance_profile.vnf_profile.name
   resource_group = data.ibm_resource_group.rg.id
 
-  #eth0 - Management Interface
+  #eth0
   primary_network_interface {
     name            = "eth0"
-    subnet          = data.ibm_is_subnet.cp_subnet0.id
-    security_groups = [ibm_is_security_group.ckp_security_group.id]
-  }
-
-  #eth1 - External Interface
-  network_interfaces {
-    name            = "eth1"
-    subnet          = data.ibm_is_subnet.cp_subnet1.id
-    security_groups = [ibm_is_security_group.ckp_security_group.id]
-  }
-
-  #eth2 - Internal Interface
-  network_interfaces {
-    name            = "eth2"
-    subnet          = data.ibm_is_subnet.cp_subnet2.id
+    subnet          = data.ibm_is_subnet.cp_subnet.id
     security_groups = [ibm_is_security_group.ckp_security_group.id]
   }
 
   vpc  = data.ibm_is_vpc.cp_vpc.id
-  zone = data.ibm_is_subnet.cp_subnet0.zone
+  zone = data.ibm_is_subnet.cp_subnet.zone
   keys = [data.ibm_is_ssh_key.cp_ssh_pub_key.id]
 
   #Custom UserData
@@ -224,41 +192,22 @@ resource "ibm_is_instance" "cp_gw_vsi" {
 # Create Check Point Gateway 2
 ##############################################################################
 
-locals {
-  image_name = "${var.CP_Version}-${var.CP_Type}"
-  image_id = lookup(local.image_map[local.image_name], var.VPC_Region)
-}
-
-resource "ibm_is_instance" "cp_gw_vsi" {
+resource "ibm_is_instance" "cp_gw_vsi_2" {
   depends_on     = [ibm_is_security_group_rule.allow_ingress_all]
   name           = var.VNF_CP-GW_Instance2
   image          = local.image_id
   profile        = data.ibm_is_instance_profile.vnf_profile.name
   resource_group = data.ibm_resource_group.rg.id
 
-  #eth0 - Management Interface
+  #eth0
   primary_network_interface {
     name            = "eth0"
-    subnet          = data.ibm_is_subnet.cp_subnet0.id
-    security_groups = [ibm_is_security_group.ckp_security_group.id]
-  }
-
-  #eth1 - External Interface
-  network_interfaces {
-    name            = "eth1"
-    subnet          = data.ibm_is_subnet.cp_subnet1.id
-    security_groups = [ibm_is_security_group.ckp_security_group.id]
-  }
-
-  #eth2 - Internal Interface
-  network_interfaces {
-    name            = "eth2"
-    subnet          = data.ibm_is_subnet.cp_subnet2.id
+    subnet          = data.ibm_is_subnet.cp_subnet.id
     security_groups = [ibm_is_security_group.ckp_security_group.id]
   }
 
   vpc  = data.ibm_is_vpc.cp_vpc.id
-  zone = data.ibm_is_subnet.cp_subnet0.zone
+  zone = data.ibm_is_subnet.cp_subnet.zone
   keys = [data.ibm_is_ssh_key.cp_ssh_pub_key.id]
 
   #Custom UserData
