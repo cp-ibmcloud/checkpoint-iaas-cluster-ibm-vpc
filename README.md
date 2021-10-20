@@ -1,6 +1,6 @@
-![](https://github.com/joe-at-cp/checkpoint-iaas-gw-ibm-vpc/blob/master/CloudGuard_IaaS.jpg?v=4&s=100)
-
 # Check Point CloudGuard Security Gateway Cluster
+
+![](https://github.com/joe-at-cp/checkpoint-iaas-ibm-vpc-resources/blob/main/images/VPCClusteringTopologyv1.2.PNG?v=4&s=100)
 
 ## About
 This template will deploy a new Check Point security gateway cluster into an existing VPC environment. The deployment will use three interfaces: Management, External, and Internal. See below for the prerequisites of this deployment type. 
