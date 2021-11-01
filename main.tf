@@ -1,6 +1,16 @@
 ##############################################################################
-# IBM Cloud Provider
+# IBM Cloud Provider 1.35.0
 ##############################################################################
+
+terraform {
+  required_version = ">= 0.13.3"
+  required_providers {
+    ibm = {
+      source  = "ibm-cloud/ibm"
+      version = "1.35.0"
+    }
+  }
+}
 
 provider "ibm" {
   ibmcloud_api_key = var.ibmcloud_api_key
@@ -169,6 +179,7 @@ resource "ibm_is_instance" "cp_gw_vsi_1" {
     name            = "eth0"
     subnet          = data.ibm_is_subnet.cp_subnet.id
     security_groups = [ibm_is_security_group.ckp_security_group.id]
+    allow_ip_spoofing = true
   }
 
   vpc  = data.ibm_is_vpc.cp_vpc.id
@@ -181,10 +192,6 @@ resource "ibm_is_instance" "cp_gw_vsi_1" {
   timeouts {
     create = "15m"
     delete = "15m"
-  }
-
-  provisioner "local-exec" {
-    command = "sleep 30"
   }
 }
 
@@ -204,6 +211,7 @@ resource "ibm_is_instance" "cp_gw_vsi_2" {
     name            = "eth0"
     subnet          = data.ibm_is_subnet.cp_subnet.id
     security_groups = [ibm_is_security_group.ckp_security_group.id]
+    allow_ip_spoofing = true
   }
 
   vpc  = data.ibm_is_vpc.cp_vpc.id
@@ -217,8 +225,50 @@ resource "ibm_is_instance" "cp_gw_vsi_2" {
     create = "15m"
     delete = "15m"
   }
+}
 
-  provisioner "local-exec" {
-    command = "sleep 30"
-  }
+##############################################################################
+# Create Private Route-Mode Load Balancer and Backend Pools
+##############################################################################
+
+resource "ibm_is_lb" "nlb" {
+  name           = "cluster-nlb"
+  subnets        = [data.ibm_is_subnet.cp_subnet.id]
+  profile        = "network-fixed"
+  type           = "private"
+  route_mode     = "true"
+}
+
+resource "ibm_is_lb_listener" "nlbHttpListener1" {
+  lb           = ibm_is_lb.nlb.id
+  protocol     = "tcp"
+}
+
+resource "ibm_is_lb_pool" "nlb_pool" {
+  name           = "cluster-pool"
+  lb             = ibm_is_lb.nlb.id
+  algorithm      = "round_robin"
+  protocol       = "tcp"
+  health_delay   = 5
+  health_retries = 2
+  health_timeout = 2
+  health_type    = "tcp"
+  health_monitor_port = "443"
+  session_persistence_type = "source_ip"
+}
+
+resource "ibm_is_lb_pool_member" "nlb_member_1" {
+  lb             = ibm_is_lb.nlb.id
+  pool           = ibm_is_lb_pool.nlb_pool.id
+  port           = 443
+  target_id      = ibm_is_instance.cp_gw_vsi_1.id
+  weight         = 50
+}
+
+resource "ibm_is_lb_pool_member" "nlb_member_2" {
+  lb             = ibm_is_lb.nlb.id
+  pool           = ibm_is_lb_pool.nlb_pool.id
+  port           = 443
+  target_id      = ibm_is_instance.cp_gw_vsi_2.id
+  weight         = 50
 }
