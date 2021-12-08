@@ -244,7 +244,6 @@ resource "ibm_is_lb_pool" "nlb_pool" {
   health_timeout = 2
   health_type    = "tcp"
   health_monitor_port = "443"
-  session_persistence_type = "source_ip"
 }
 
 resource "ibm_is_lb_pool_member" "nlb_member_1" {
