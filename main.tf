@@ -94,6 +94,10 @@ variable "TF_VERSION" {
  description = "terraform engine version to be used in schematics"
 }
 
+variable "CP_NLB" {
+ default = "cluster-nlb"
+ description = "The name of the Clusters Network Load Balancer"
+}
 ##############################################################################
 # Data block 
 ##############################################################################
@@ -185,6 +189,12 @@ resource "ibm_is_instance" "cp_gw_vsi_1" {
   }
 }
 
+#Create and Assoiciate Floating IP Address
+resource "ibm_is_floating_ip" "cp_gw_vsi_1_floatingip" {
+  name   = "${var.VNF_CP-GW_Instance1}-fip"
+  target = ibm_is_instance.cp_gw_vsi_1.primary_network_interface.0.id
+}
+
 ##############################################################################
 # Create Check Point Gateway 2
 ##############################################################################
@@ -217,12 +227,18 @@ resource "ibm_is_instance" "cp_gw_vsi_2" {
   }
 }
 
+#Create and Assoiciate Floating IP Address
+resource "ibm_is_floating_ip" "cp_gw_vsi_2_floatingip" {
+  name   = "${var.VNF_CP-GW_Instance2}-fip"
+  target = ibm_is_instance.cp_gw_vsi_2.primary_network_interface.0.id
+}
+
 ##############################################################################
 # Create Private Route-Mode Load Balancer and Backend Pools
 ##############################################################################
 
 resource "ibm_is_lb" "nlb" {
-  name           = "cluster-nlb"
+  name           = var.CP_NLB
   subnets        = [data.ibm_is_subnet.cp_subnet.id]
   profile        = "network-fixed"
   type           = "private"
@@ -231,11 +247,12 @@ resource "ibm_is_lb" "nlb" {
 
 resource "ibm_is_lb_listener" "nlbHttpListener1" {
   lb           = ibm_is_lb.nlb.id
+  default_pool = ibm_is_lb_pool.nlb_pool.id
   protocol     = "tcp"
 }
 
 resource "ibm_is_lb_pool" "nlb_pool" {
-  name           = "cluster-pool"
+  name           = "${var.CP_NLB}-pool"
   lb             = ibm_is_lb.nlb.id
   algorithm      = "round_robin"
   protocol       = "tcp"
