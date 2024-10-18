@@ -98,6 +98,17 @@ variable "CP_NLB" {
  default = "cluster-nlb"
  description = "The name of the Clusters Network Load Balancer"
 }
+
+variable "vni_gw1_interface_name" {
+  default     = "gw1-interface"
+  description = "Name of interface VNI GW1."
+}
+
+variable "vni_gw2_interface_name" {
+  default     = "gw2-interface"
+  description = "Name of interface VNI GW2."
+}
+
 ##############################################################################
 # Data block 
 ##############################################################################
