@@ -98,7 +98,6 @@ variable "CP_NLB" {
  default = "cluster-nlb"
  description = "The name of the Clusters Network Load Balancer"
 }
-
 ##############################################################################
 # Data block 
 ##############################################################################
